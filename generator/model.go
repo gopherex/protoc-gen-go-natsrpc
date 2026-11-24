@@ -15,6 +15,8 @@ type servicePlan struct {
 	methods []methodPlan
 }
 
+func (plan servicePlan) bindingName() string { return plan.svc.GoName + "NATS" }
+
 type methodPlan struct {
 	method           *protogen.Method
 	subject          string

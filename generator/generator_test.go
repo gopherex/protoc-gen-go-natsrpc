@@ -44,7 +44,11 @@ func TestGenerate(t *testing.T) {
 	if file.GetName() != "rpc_natsrpc.pb.go" {
 		t.Fatalf("filename %s", file.GetName())
 	}
-	for _, want := range []string{`Service: "Greeter"`, `Subject("Hello", 0`, "type GreeterHandler interface", "func RegisterGreeter"} {
+	for _, want := range []string{
+		`Service: "Greeter"`, `Subject("Hello", 0`,
+		"type GreeterNATSClient struct", "func NewGreeterNATSClient(",
+		"type GreeterNATSHandler interface", "func RegisterGreeterNATS(",
+	} {
 		if !strings.Contains(file.GetContent(), want) {
 			t.Errorf("missing %q\n%s", want, file.GetContent())
 		}

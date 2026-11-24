@@ -9,6 +9,12 @@ wrappers, or gRPC dependencies.
 All four standard protobuf shapes are recognized. Unary uses the runtime's
 one-request/one-reply operation. Server streaming, client streaming and bidi
 use the same versioned conversation wire in `github.com/gopherex/natsrpc`.
+Generated bindings reserve transport-specific names: `<Service>NATSClient`,
+`New<Service>NATSClient`, `<Service>NATSHandler`, `Register<Service>NATS`, and
+`<Service>NATS<Method>Stream`. The gRPC plugin can generate in the same Go
+package. The NATS namespace is only a Go naming convention; it does not
+change subjects or network bytes.
+
 Generated method signatures remain typed; the generator does not select,
 require, or implement a payload codec. Both generated constructors require an
 application codec. Use the same codec and queue group arrangement across
@@ -23,3 +29,6 @@ the generator.
 Generated unary calls forward per-call options to the runtime. Typed
 refusals use the caller's supplied detail factory, not a generator-specific
 Protobuf annotation. The generator does not choose a codec or detail type.
+
+The integration suite also compiles NATS and gRPC output from the same proto
+in one package in a scratch module. The plugin itself does not depend on gRPC.

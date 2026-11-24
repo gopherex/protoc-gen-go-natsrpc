@@ -22,10 +22,10 @@ choose JSON, binary Protobuf or any other format implicitly:
 
 ```go
 codec := jsoncodec.Codec{}
-registration, err := example.RegisterCardinality(ctx, conn, handler, codec,
+registration, err := example.RegisterCardinalityNATS(ctx, conn, handler, codec,
     natsrpc.ServerConfig{QueueGroup: "cardinality-replicas"})
 // Check err, then Drain the registration during shutdown.
-client, err := example.NewCardinalityClient(conn, codec, natsrpc.ClientConfig{})
+client, err := example.NewCardinalityNATSClient(conn, codec, natsrpc.ClientConfig{})
 // Check err before calling client.Echo(ctx, &example.Chunk{Text: "hello"}).
 ```
 

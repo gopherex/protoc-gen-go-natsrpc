@@ -122,7 +122,7 @@ func checkGenerated(t *testing.T, parent context.Context, url string, codec nats
 		t.Fatal(err)
 	}
 	defer conn.Close()
-	reg, err := example.RegisterCardinality(ctx, conn, cardinality{}, codec, natsrpc.ServerConfig{QueueGroup: "example.replicas"})
+	reg, err := example.RegisterCardinalityNATS(ctx, conn, cardinality{}, codec, natsrpc.ServerConfig{QueueGroup: "example.replicas"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,7 +133,7 @@ func checkGenerated(t *testing.T, parent context.Context, url string, codec nats
 			t.Error(err)
 		}
 	}()
-	client, err := example.NewCardinalityClient(conn, codec, natsrpc.ClientConfig{})
+	client, err := example.NewCardinalityNATSClient(conn, codec, natsrpc.ClientConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +164,7 @@ func checkGenerated(t *testing.T, parent context.Context, url string, codec nats
 	checkGeneratedChat(t, ctx, client)
 }
 
-func checkGeneratedChat(t *testing.T, ctx context.Context, client *example.CardinalityClient) {
+func checkGeneratedChat(t *testing.T, ctx context.Context, client *example.CardinalityNATSClient) {
 	t.Helper()
 	chat, err := client.Chat(ctx)
 	if err != nil {
@@ -191,7 +191,7 @@ func checkGeneratedChat(t *testing.T, ctx context.Context, client *example.Cardi
 	}
 }
 
-func checkGeneratedRefusal(t *testing.T, ctx context.Context, client *example.CardinalityClient) {
+func checkGeneratedRefusal(t *testing.T, ctx context.Context, client *example.CardinalityNATSClient) {
 	t.Helper()
 	for _, remoteCancel := range []bool{false, true} {
 		opts := []natsrpc.CallOption{natsrpc.WithErrorDetail(func() *example.Chunk { return new(example.Chunk) })}

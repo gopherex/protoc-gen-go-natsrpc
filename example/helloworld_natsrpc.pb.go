@@ -8,21 +8,21 @@ import (
 	nats_go "github.com/nats-io/nats.go"
 )
 
-func routeGreeter() natsrpc.Route {
+func routeGreeterNATS() natsrpc.Route {
 	return natsrpc.Route{Prefix: "gopherex.natsrpc.example", Service: "Greeter"}
 }
 
-type GreeterClient struct{ client *natsrpc.Client }
+type GreeterNATSClient struct{ client *natsrpc.Client }
 
-func NewGreeterClient(conn *nats_go.Conn, codec natsrpc.Codec, config natsrpc.ClientConfig) (*GreeterClient, error) {
+func NewGreeterNATSClient(conn *nats_go.Conn, codec natsrpc.Codec, config natsrpc.ClientConfig) (*GreeterNATSClient, error) {
 	client, err := natsrpc.NewClient(conn, codec, config)
 	if err != nil {
 		return nil, err
 	}
-	return &GreeterClient{client: client}, nil
+	return &GreeterNATSClient{client: client}, nil
 }
-func (c *GreeterClient) SayHello(ctx context.Context, req *HelloRequest, opts ...natsrpc.CallOption) (*HelloReply, error) {
-	subject, err := routeGreeter().Subject("SayHello", 0)
+func (c *GreeterNATSClient) SayHello(ctx context.Context, req *HelloRequest, opts ...natsrpc.CallOption) (*HelloReply, error) {
+	subject, err := routeGreeterNATS().Subject("SayHello", 0)
 	if err != nil {
 		return nil, err
 	}
@@ -33,12 +33,12 @@ func (c *GreeterClient) SayHello(ctx context.Context, req *HelloRequest, opts ..
 	return response, nil
 }
 
-type GreeterHandler interface {
+type GreeterNATSHandler interface {
 	SayHello(ctx context.Context, req *HelloRequest) (*HelloReply, error)
 }
 
-func RegisterGreeter(ctx context.Context, conn *nats_go.Conn, handler GreeterHandler, codec natsrpc.Codec, config natsrpc.ServerConfig) (*natsrpc.Registration, error) {
-	return natsrpc.Register(ctx, conn, codec, routeGreeter(), []natsrpc.Method{
+func RegisterGreeterNATS(ctx context.Context, conn *nats_go.Conn, handler GreeterNATSHandler, codec natsrpc.Codec, config natsrpc.ServerConfig) (*natsrpc.Registration, error) {
+	return natsrpc.Register(ctx, conn, codec, routeGreeterNATS(), []natsrpc.Method{
 		{Name: "SayHello", Mode: natsrpc.RequestReply, Handle: natsrpc.Unary(func() *HelloRequest { return new(HelloRequest) }, handler.SayHello), Metadata: map[string]string{"mode": "RequestReply"}},
 	}, config)
 }

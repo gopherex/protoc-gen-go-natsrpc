@@ -8,21 +8,21 @@ import (
 	nats_go "github.com/nats-io/nats.go"
 )
 
-func routeCardinality() natsrpc.Route {
+func routeCardinalityNATS() natsrpc.Route {
 	return natsrpc.Route{Prefix: "gopherex.natsrpc.example", Service: "Cardinality"}
 }
 
-type CardinalityClient struct{ client *natsrpc.Client }
+type CardinalityNATSClient struct{ client *natsrpc.Client }
 
-func NewCardinalityClient(conn *nats_go.Conn, codec natsrpc.Codec, config natsrpc.ClientConfig) (*CardinalityClient, error) {
+func NewCardinalityNATSClient(conn *nats_go.Conn, codec natsrpc.Codec, config natsrpc.ClientConfig) (*CardinalityNATSClient, error) {
 	client, err := natsrpc.NewClient(conn, codec, config)
 	if err != nil {
 		return nil, err
 	}
-	return &CardinalityClient{client: client}, nil
+	return &CardinalityNATSClient{client: client}, nil
 }
-func (c *CardinalityClient) Echo(ctx context.Context, req *Chunk, opts ...natsrpc.CallOption) (*Chunk, error) {
-	subject, err := routeCardinality().Subject("Echo", 0)
+func (c *CardinalityNATSClient) Echo(ctx context.Context, req *Chunk, opts ...natsrpc.CallOption) (*Chunk, error) {
+	subject, err := routeCardinalityNATS().Subject("Echo", 0)
 	if err != nil {
 		return nil, err
 	}
@@ -32,18 +32,18 @@ func (c *CardinalityClient) Echo(ctx context.Context, req *Chunk, opts ...natsrp
 	}
 	return response, nil
 }
-func (c *CardinalityClient) List(ctx context.Context, req *Chunk, receive func(*Chunk) error, opts ...natsrpc.CallOption) error {
-	subject, err := routeCardinality().Subject("List", 0)
+func (c *CardinalityNATSClient) List(ctx context.Context, req *Chunk, receive func(*Chunk) error, opts ...natsrpc.CallOption) error {
+	subject, err := routeCardinalityNATS().Subject("List", 0)
 	if err != nil {
 		return err
 	}
 	return natsrpc.Stream(ctx, c.client, subject, req, func() *Chunk { return new(Chunk) }, receive, opts...)
 }
 
-type CardinalityCollectStream struct{ session *natsrpc.StreamSession }
+type CardinalityNATSCollectStream struct{ session *natsrpc.StreamSession }
 
-func (c *CardinalityClient) Collect(ctx context.Context, opts ...natsrpc.CallOption) (*CardinalityCollectStream, error) {
-	subject, err := routeCardinality().Subject("Collect", 0)
+func (c *CardinalityNATSClient) Collect(ctx context.Context, opts ...natsrpc.CallOption) (*CardinalityNATSCollectStream, error) {
+	subject, err := routeCardinalityNATS().Subject("Collect", 0)
 	if err != nil {
 		return nil, err
 	}
@@ -51,13 +51,13 @@ func (c *CardinalityClient) Collect(ctx context.Context, opts ...natsrpc.CallOpt
 	if err != nil {
 		return nil, err
 	}
-	return &CardinalityCollectStream{session: session}, nil
+	return &CardinalityNATSCollectStream{session: session}, nil
 }
-func (s *CardinalityCollectStream) Send(ctx context.Context, req *Chunk) error {
+func (s *CardinalityNATSCollectStream) Send(ctx context.Context, req *Chunk) error {
 	return s.session.Send(ctx, req)
 }
-func (s *CardinalityCollectStream) Close() { s.session.Close() }
-func (s *CardinalityCollectStream) CloseAndRecv(ctx context.Context) (*Chunk, error) {
+func (s *CardinalityNATSCollectStream) Close() { s.session.Close() }
+func (s *CardinalityNATSCollectStream) CloseAndRecv(ctx context.Context) (*Chunk, error) {
 	response := new(Chunk)
 	if err := s.session.CloseAndRecv(ctx, response); err != nil {
 		return nil, err
@@ -65,10 +65,10 @@ func (s *CardinalityCollectStream) CloseAndRecv(ctx context.Context) (*Chunk, er
 	return response, nil
 }
 
-type CardinalityChatStream struct{ session *natsrpc.StreamSession }
+type CardinalityNATSChatStream struct{ session *natsrpc.StreamSession }
 
-func (c *CardinalityClient) Chat(ctx context.Context, opts ...natsrpc.CallOption) (*CardinalityChatStream, error) {
-	subject, err := routeCardinality().Subject("Chat", 0)
+func (c *CardinalityNATSClient) Chat(ctx context.Context, opts ...natsrpc.CallOption) (*CardinalityNATSChatStream, error) {
+	subject, err := routeCardinalityNATS().Subject("Chat", 0)
 	if err != nil {
 		return nil, err
 	}
@@ -76,14 +76,16 @@ func (c *CardinalityClient) Chat(ctx context.Context, opts ...natsrpc.CallOption
 	if err != nil {
 		return nil, err
 	}
-	return &CardinalityChatStream{session: session}, nil
+	return &CardinalityNATSChatStream{session: session}, nil
 }
-func (s *CardinalityChatStream) Send(ctx context.Context, req *Chunk) error {
+func (s *CardinalityNATSChatStream) Send(ctx context.Context, req *Chunk) error {
 	return s.session.Send(ctx, req)
 }
-func (s *CardinalityChatStream) Close()                              { s.session.Close() }
-func (s *CardinalityChatStream) CloseSend(ctx context.Context) error { return s.session.CloseSend(ctx) }
-func (s *CardinalityChatStream) Recv(ctx context.Context) (*Chunk, error) {
+func (s *CardinalityNATSChatStream) Close() { s.session.Close() }
+func (s *CardinalityNATSChatStream) CloseSend(ctx context.Context) error {
+	return s.session.CloseSend(ctx)
+}
+func (s *CardinalityNATSChatStream) Recv(ctx context.Context) (*Chunk, error) {
 	response := new(Chunk)
 	if err := s.session.Recv(ctx, response); err != nil {
 		return nil, err
@@ -91,15 +93,15 @@ func (s *CardinalityChatStream) Recv(ctx context.Context) (*Chunk, error) {
 	return response, nil
 }
 
-type CardinalityHandler interface {
+type CardinalityNATSHandler interface {
 	Echo(ctx context.Context, req *Chunk) (*Chunk, error)
 	List(ctx context.Context, req *Chunk, send func(*Chunk) error) error
 	Collect(ctx context.Context, recv func() (*Chunk, error)) (*Chunk, error)
 	Chat(ctx context.Context, recv func() (*Chunk, error), send func(*Chunk) error) error
 }
 
-func RegisterCardinality(ctx context.Context, conn *nats_go.Conn, handler CardinalityHandler, codec natsrpc.Codec, config natsrpc.ServerConfig) (*natsrpc.Registration, error) {
-	return natsrpc.Register(ctx, conn, codec, routeCardinality(), []natsrpc.Method{
+func RegisterCardinalityNATS(ctx context.Context, conn *nats_go.Conn, handler CardinalityNATSHandler, codec natsrpc.Codec, config natsrpc.ServerConfig) (*natsrpc.Registration, error) {
+	return natsrpc.Register(ctx, conn, codec, routeCardinalityNATS(), []natsrpc.Method{
 		{Name: "Echo", Mode: natsrpc.RequestReply, Handle: natsrpc.Unary(func() *Chunk { return new(Chunk) }, handler.Echo), Metadata: map[string]string{"mode": "RequestReply"}},
 		{Name: "List", Mode: natsrpc.StreamReply, Stream: natsrpc.Streamed(func() *Chunk { return new(Chunk) }, handler.List), Metadata: map[string]string{"mode": "StreamReply"}},
 		{Name: "Collect", Mode: natsrpc.ClientStreamReply, Stream: natsrpc.ClientStreamed(func() *Chunk { return new(Chunk) }, handler.Collect), Metadata: map[string]string{"mode": "ClientStreamReply"}},

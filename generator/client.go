@@ -37,20 +37,20 @@ func emitClient(out *protogen.GeneratedFile, plan servicePlan, method methodPlan
 func clientSignature(out *protogen.GeneratedFile) string { return "ctx " + ctxType(out) }
 
 func emitSubject(out *protogen.GeneratedFile, plan servicePlan, method methodPlan, fail string) {
-	out.P("subject, err := route", plan.svc.GoName, "().Subject(", strconv.Quote(method.subject), ", 0)")
+	out.P("subject, err := route", plan.bindingName(), "().Subject(", strconv.Quote(method.subject), ", 0)")
 	out.P("if err != nil { return ", fail, " }")
 }
 
 func openClient(
 	out *protogen.GeneratedFile, plan servicePlan, method methodPlan, name, signature, result, fail string,
 ) {
-	out.P("func (c *", plan.svc.GoName, "Client) ", name, "(", signature,
+	out.P("func (c *", plan.bindingName(), "Client) ", name, "(", signature,
 		", opts ...", runtimeName(out, "CallOption"), ") ", result, " {")
 	emitSubject(out, plan, method, fail)
 }
 
 func emitConversationClient(out *protogen.GeneratedFile, plan servicePlan, method methodPlan) {
-	name := plan.svc.GoName + method.method.GoName + "Stream"
+	name := plan.bindingName() + method.method.GoName + "Stream"
 
 	open := "OpenClientStream"
 	if method.stream {

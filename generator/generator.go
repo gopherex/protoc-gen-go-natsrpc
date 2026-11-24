@@ -45,7 +45,7 @@ func Generate(plugin *protogen.Plugin) error {
 }
 
 func emitService(out *protogen.GeneratedFile, plan servicePlan) {
-	name := plan.svc.GoName
+	name := plan.bindingName()
 	out.P("func route", name, "() ", runtimeName(out, "Route"), " {")
 	out.P("return ", runtimeName(out, "Route"), "{Prefix: ", strconv.Quote(plan.route.Prefix), ", Service: ",
 		strconv.Quote(plan.route.Service), "}")
@@ -79,7 +79,7 @@ func replyType(out *protogen.GeneratedFile, method methodPlan) string {
 }
 
 func emitRegistration(out *protogen.GeneratedFile, plan servicePlan) {
-	name := plan.svc.GoName
+	name := plan.bindingName()
 	out.P("type ", name, "Handler interface {")
 
 	for _, method := range plan.methods {
