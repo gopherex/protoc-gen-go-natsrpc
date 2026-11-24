@@ -34,6 +34,13 @@ binary Protobuf, supply an adapter to `proto.Marshal` and `proto.Unmarshal`
 using `natsrpc.NewFuncCodec`; see the working fixture in `tests/generated_test.go`.
 The checked-in `example/cardinality.proto` demonstrates every RPC shape.
 
+Generated unary methods pass native call options through unchanged. Use
+`natsrpc.WithRemoteCancel()` for an opt-in unary handshake, and
+`natsrpc.WithErrorDetail(func() *example.Chunk { return new(example.Chunk) })`
+when `*example.Chunk` is the method's declared application refusal detail.
+Use `errors.As` with `*natsrpc.DetailedError[*example.Chunk]` to read the
+stable refusal and decoded detail. Transport errors do not populate it.
+
 `make test`, `make lint` and `make integration` check code generation and all
 four real-broker operations with explicitly supplied JSON and Protobuf codecs.
 See [generator behavior](docs/generator.md) and the runtime repository for

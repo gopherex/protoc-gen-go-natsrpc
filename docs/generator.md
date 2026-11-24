@@ -19,3 +19,7 @@ and runs the generated sample against Docker NATS with two independent,
 explicitly injected codecs: Protobuf and standard JSON. Runtime reliability,
 ACL, process failure and load tests belong to the runtime repository, not to
 the generator.
+
+Generated unary calls forward per-call options to the runtime. Typed
+refusals use the caller's supplied detail factory, not a generator-specific
+Protobuf annotation. The generator does not choose a codec or detail type.

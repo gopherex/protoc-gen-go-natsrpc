@@ -27,7 +27,8 @@ func TestGeneratedBindings(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), 90*time.Second)
 	defer cancel()
 	broker, err := testcontainers.Run(ctx, "nats:2.15.3-alpine", testcontainers.WithExposedPorts("4222/tcp"),
-		testcontainers.WithWaitStrategy(wait.ForListeningPort("4222/tcp").SkipInternalCheck()))
+		testcontainers.WithWaitStrategy(wait.ForAll(
+			wait.ForLog("Server is ready"), wait.ForListeningPort("4222/tcp").SkipInternalCheck())))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,6 +66,9 @@ func unmarshalProto(data []byte, into any) error {
 type cardinality struct{}
 
 func (cardinality) Echo(_ context.Context, req *example.Chunk) (*example.Chunk, error) {
+	if req.GetText() == "refuse" {
+		return nil, &natsrpc.Error{Code: natsrpc.CodeNotFound, Message: "example refusal", Detail: &example.Chunk{Text: "binary detail"}}
+	}
 	return &example.Chunk{Text: req.GetText()}, nil
 }
 
@@ -137,6 +141,7 @@ func checkGenerated(t *testing.T, parent context.Context, url string, codec nats
 	if err != nil || unary.GetText() != "echo" {
 		t.Fatalf("unary %v %v", unary, err)
 	}
+	checkGeneratedRefusal(t, ctx, client)
 	var listed []string
 	err = client.List(ctx, &example.Chunk{Text: "a,b"}, func(msg *example.Chunk) error { listed = append(listed, msg.GetText()); return nil })
 	if err != nil || strings.Join(listed, ",") != "a,b" {
@@ -183,5 +188,20 @@ func checkGeneratedChat(t *testing.T, ctx context.Context, client *example.Cardi
 	}
 	if _, err := chat.Recv(ctx); !errors.Is(err, io.EOF) {
 		t.Fatal(err)
+	}
+}
+
+func checkGeneratedRefusal(t *testing.T, ctx context.Context, client *example.CardinalityClient) {
+	t.Helper()
+	for _, remoteCancel := range []bool{false, true} {
+		opts := []natsrpc.CallOption{natsrpc.WithErrorDetail(func() *example.Chunk { return new(example.Chunk) })}
+		if remoteCancel {
+			opts = append(opts, natsrpc.WithRemoteCancel())
+		}
+		response, err := client.Echo(ctx, &example.Chunk{Text: "refuse"}, opts...)
+		var refusal *natsrpc.DetailedError[*example.Chunk]
+		if response != nil || !errors.As(err, &refusal) || refusal.Failure.Code != natsrpc.CodeNotFound || refusal.Detail.GetText() != "binary detail" {
+			t.Fatalf("typed refusal, remote cancellation %v: %v %v", remoteCancel, response, err)
+		}
 	}
 }
