@@ -1,0 +1,295 @@
+# Canonical golangci-lint config for Go repos (source: komeet platform/.golangci.yaml).
+# Copy as .golangci.yaml into the repo. Adapt ONLY the places marked ADAPT; never
+# weaken a linter or a threshold, never add //nolint. A per-file exclusion is allowed
+# only where a library interface makes the rule impossible to satisfy: one rule per
+# file, with the reason in a comment.
+version: "2"
+output:
+  formats:
+    text:
+      path: stdout
+  sort-order:
+    - linter
+    - severity
+    - file
+linters:
+  default: none
+  enable:
+    - asasalint
+    - bidichk
+    - bodyclose
+    - canonicalheader
+    - containedctx
+    - contextcheck
+    - cyclop
+    - decorder
+    - dogsled
+    - dupl
+    - dupword
+    - durationcheck
+    - err113
+    - errcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+    - fatcontext
+    - forbidigo
+    - forcetypeassert
+    - funlen
+    - gocheckcompilerdirectives
+    - gochecknoglobals
+    - gochecknoinits
+    - gochecksumtype
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - gomoddirectives
+    - gomodguard_v2
+    - goprintffuncname
+    - gosec
+    - gosmopolitan
+    - govet
+    - grouper
+    - importas
+    - inamedparam
+    - ineffassign
+    - interfacebloat
+    - intrange
+    - ireturn
+    - lll
+    - loggercheck
+    - maintidx
+    - makezero
+    - mirror
+    - misspell
+    - mnd
+    - musttag
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - nlreturn
+    - noctx
+    - nolintlint
+    - nonamedreturns
+    - nosprintfhostport
+    - paralleltest
+    - perfsprint
+    - prealloc
+    - predeclared
+    - promlinter
+    - protogetter
+    - reassign
+    - revive
+    - rowserrcheck
+    - sloglint
+    - spancheck
+    - sqlclosecheck
+    - staticcheck
+    - tagalign
+    - tagliatelle
+    - testableexamples
+    - testifylint
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - varnamelen
+    - wastedassign
+    - whitespace
+    - wrapcheck
+    - wsl_v5
+  settings:
+    errcheck:
+      check-type-assertions: true
+    forbidigo:
+      # A panic never crashes the process and is never raised on purpose: errors
+      # travel up as values. Must* helpers are panics too: gocritic ruleguard (ruleguard.go)
+      # allows them only as package-level var initializers, which fail at start-up.
+      forbid:
+        - pattern: ^(fmt\.Print(|f|ln)|print|println)$
+        - pattern: ^panic$
+          msg: return an error instead; explicit panics are forbidden
+    exhaustive:
+      check:
+        - switch
+        - mapliteral
+      default-signifies-exhaustive: true
+    cyclop:
+      max-complexity: 15
+    funlen:
+      lines: 75
+    gocognit:
+      min-complexity: 30
+    gocritic:
+      disabled-checks:
+        - dupImport
+        - octalLiteral
+        # Contradicts nonamedreturns: a function with three or more results
+        # cannot satisfy both. Results stay unnamed.
+        - unnamedResult
+        - whyNoLint
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+        - experimental
+        - opinionated
+      settings:
+        # Values immutable after construction (scenarios, ports, configs) are passed by
+        # value; the default threshold of 80 pushed them into pointers and workaround fields.
+        hugeParam:
+          sizeThreshold: 256
+        captLocal:
+          paramsOnly: false
+        underef:
+          skipRecvDeref: false
+        # Repo rules in ruleguard.go next to this file (copied from ~/.claude/rules/lang/go.ruleguard.go);
+        # its dsl import needs `require github.com/quasilyte/go-ruleguard/dsl` in go.mod.
+        ruleguard:
+          rules: ${base-path}/ruleguard.go
+          failOn: all
+    govet:
+      disable:
+        - fieldalignment
+      enable-all: true
+      settings:
+        shadow:
+          strict: true
+    importas:
+      no-unaliased: true
+      # ADAPT: import paths (regexps) and their required aliases for this module.
+      alias: []
+    lll:
+      line-length: 120
+    misspell:
+      locale: US
+    nakedret:
+      max-func-lines: 0
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-no-explanation:
+        - funlen
+        - gocognit
+        - lll
+      allow-unused: false
+    tagliatelle:
+      case:
+        rules:
+          json: snake
+    varnamelen:
+      max-distance: 5
+      min-name-length: 3
+      check-receiver: false
+      check-return: false
+      check-type-param: false
+      ignore-names:
+        - err
+        - tc
+      ignore-type-assert-ok: false
+      ignore-map-index-ok: false
+      ignore-chan-recv-ok: false
+      ignore-decls:
+        - t testing.T
+        - e error
+        - i int
+        - T any
+    wrapcheck:
+      # ADAPT: this module and the user's own libraries whose errors pass through unwrapped.
+      ignore-package-globs:
+        - github.com/gopherex/protoc-gen-go-natsrpc/*
+        - github.com/gopherex/*
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - lll
+        source: ^//\s*go:generate\s
+      # Tests are checked for real defects only (govet, staticcheck, unused, ineffassign, errorlint,
+      # nilerr, protogetter, testifylint, thelper, tparallel, paralleltest, forbidigo, godox);
+      # style and shape rules do not apply to test code.
+      - linters:
+          - bodyclose
+          - containedctx
+          - cyclop
+          - decorder
+          - dupl
+          - dupword
+          - err113
+          - errcheck
+          - exhaustive
+          - forcetypeassert
+          - funlen
+          - gochecknoglobals
+          - gocognit
+          - goconst
+          - gocritic
+          - gocyclo
+          - godot
+          - gosec
+          - grouper
+          - inamedparam
+          - intrange
+          - ireturn
+          - lll
+          - maintidx
+          - mnd
+          - nestif
+          - nlreturn
+          - noctx
+          - nonamedreturns
+          - perfsprint
+          - prealloc
+          - revive
+          - unparam
+          - varnamelen
+          - whitespace
+          - wrapcheck
+          - wsl_v5
+        path: (_test\.go$|(^|/)tests/)
+      - linters:
+          - govet
+        text: 'shadow: declaration of "(err|ctx)" shadows declaration at'
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  max-same-issues: 50
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - goimports
+  settings:
+    gofumpt:
+      # ADAPT: the module path from go.mod.
+      module-path: github.com/gopherex/protoc-gen-go-natsrpc
+    gci:
+      # ADAPT: own-ecosystem prefixes the module imports; localmodule stays last before blank/dot.
+      sections:
+        - standard
+        - default
+        - prefix(github.com/gopherex)
+        - localmodule
+        - blank
+        - dot
+      custom-order: true
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

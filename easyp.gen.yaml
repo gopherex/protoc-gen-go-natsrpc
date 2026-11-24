@@ -1,0 +1,12 @@
+version: v1
+generate:
+  paths: [example]
+plugins:
+  - name: go
+    out: .
+    opts:
+      paths: [source_relative]
+  - name: go-natsrpc
+    out: .
+    opts:
+      paths: [source_relative]

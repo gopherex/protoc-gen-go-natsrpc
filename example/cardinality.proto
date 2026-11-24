@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package gopherex.natsrpc.example;
+
+option go_package = "github.com/gopherex/protoc-gen-go-natsrpc/example;example";
+
+message Chunk {
+  string text = 1;
+}
+
+service Cardinality {
+  rpc Echo(Chunk) returns (Chunk);
+  rpc List(Chunk) returns (stream Chunk);
+  rpc Collect(stream Chunk) returns (Chunk);
+  rpc Chat(stream Chunk) returns (stream Chunk);
+}
